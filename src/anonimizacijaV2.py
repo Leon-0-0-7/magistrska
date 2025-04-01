@@ -22,6 +22,7 @@ import pandas as pd
 #     time=np.arange(
 #         0, 10.00, 0.01
 #     ),  # 10 sekundni interval, vzorec na 0.01 sekunde - 1000 vzorcev/10s = 100 vzorcev/s
+#signal 40HZ, nekaj minut. 50MB exel - več featerjev.
 # )
 
 # #shrani v statistika.csv
