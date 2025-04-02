@@ -14,7 +14,7 @@ def statistika(df):
     Izračuna in izpiše globalne statistike za podane signale v DataFrame-u: povprečje, standardni odklon in skewness.
     """
     # 1. Izločite časovni stolpec
-    numeric_df = df.drop(columns=["time"])
+    numeric_df = df.drop(columns=["time_s"])
 
     # 2. Izračunajte globalne statistike
     povprečje = numeric_df.mean().mean()
@@ -37,11 +37,11 @@ def plot_signals_with_seaborn(df, title="Signal Plot with Seaborn"):
     plot_signals_with_seaborn(generiraniSignali)
     """
     # Preoblikuj DataFrame v dolgo obliko za Seaborn
-    df_melted = df.melt(id_vars="time", var_name="Signal", value_name="Value")
+    df_melted = df.melt(id_vars="time_s", var_name="Signal", value_name="Value")
 
     # Ustvari graf z uporabo Seaborn
     plt.figure(figsize=(12, 6))
-    sns.lineplot(data=df_melted, x="time", y="Value", hue="Signal", palette="tab10")
+    sns.lineplot(data=df_melted, x="time_s", y="Value", hue="Signal", palette="tab10")
 
     # Nastavitve grafa
     plt.title(title)
@@ -115,7 +115,7 @@ def generate_signals_with_scipy_skewnorm(
     size = len(time)
 
     # Inicializiramo DataFrame s časovnim stolpcem
-    df = pd.DataFrame({"time": time})
+    df = pd.DataFrame({"time_s": time})
 
     adj_alpha = _find_alpha(alpha)
     adj_loc, adj_scale = _adjust_skewnorm_params(mean, std_dev, adj_alpha)
@@ -157,16 +157,18 @@ def create_interactive_plot(data):
     # Melt the DataFrame to convert it to long format
     # Ta preoblikovanje je koristno za analizo in vizualizacijo podatkov,
     # saj spremeni podatke iz širokega formata (kjer je vsak signal v svojem stolpcu) v dolgi format (kjer so vsi signali v enem stolpcu)
-    melted_df = pd.melt(data, id_vars=["time"], var_name="signal", value_name="value")
+    melted_df = pd.melt(data, id_vars=["time_s"], var_name="signal", value_name="value")
 
     # Create the interactive plot with dropdown
     fig = px.line(
         melted_df,
-        x="time",
+        x="time_s",
         y="value",
         color="signal",
         title="Interactive Signal Selector",
         labels={"time": "Time [s]", "value": "Velikost zenice [mm]"},
+        render_mode="webgl"  # Use WebGL rendering
+
     )
 
     return fig
@@ -290,13 +292,12 @@ def anonim_count(X_df, Y_df):
     meth_code = "quant"
     meth_pars = {"min": 0, "max": 10, "dif": 0.5}
     anonimizirani_original = anonymize_signals(X_df, meth_code, meth_pars)
-
     results = []
 
     for column in anonimizirani_original.columns[1:]:
         count = 0
         for column2 in Y_df.columns[1:]:
-            if (anonimizirani_original[column] == Y_df[column2]).all():
+            if anonimizirani_original[column].equals(Y_df[column2]):
                 count += 1
         results.append({"signal_ID": column, "count": count})
 
