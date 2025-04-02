@@ -45,10 +45,10 @@ time_series = pd.Series(simulated_data)
 
 # Step 2: Check Self-Similarity (Autocorrelation)
 fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-plot_acf(time_series, ax=axes[0], title="Autocorrelation (ACF)")
+plot_acf(time_series, ax=axes[0], title="Autocorrelation (ACF) - for parameter q")
 # Graf ACF prikazuje kako močno so trenutne vrednosti odvisne od preteklih vrednosti.
 #Pomaga pri določanju parametra q (število zamikov premikajočega povprečja) za MA komponento ARIMA modela.
-plot_pacf(time_series, ax=axes[1], title="Partial Autocorrelation (PACF)")
+plot_pacf(time_series, ax=axes[1], title="Partial Autocorrelation (PACF) - for parameter p")
 #Graf PACF prikazuje Neposredno povezavo med trenutnimi vrednostmi in preteklimi vrednostmi.
 #Pomaga pri določanju parametra p (število zamikov autoregresije) za AR komponento ARIMA modela.
 plt.show()
@@ -70,8 +70,26 @@ plt.show()
 # bo PACF za lag=2 nizka, saj odstrani posredni vpliv.
 
 
+# Perform the Augmented Dickey-Fuller test on the original series
+from statsmodels.tsa.stattools import adfuller
+result_original = adfuller(time_series)
+
+print(f"ADF Statistic (Original): {result_original[0]:.4f}")
+print(f"p-value (Original): {result_original[1]:.4f}")
+
+if result_original[1] < 0.05:
+    print("Interpretation: The original series is Stationary.\n")
+else:
+    print("Interpretation: The original series is Non-Stationary.\n")
+
+
+#additional step test train data Split data into train and test
+train_size = int(len(time_series) * 0.8)
+train, test = time_series.iloc[:train_size], time_series.iloc[train_size:]
+
+
 # Step 3: Fit an ARIMA Model to the Data (p=2, d=0, q=1)
-model = ARIMA(time_series, order=(2, 0, 1))  # AR(2), I(0), MA(1) - to dobimo iz grafa kjer je izven meje
+model = ARIMA(train, order=(2, 0, 1))  # AR(2), I(0), MA(1) - to dobimo iz grafa kjer je izven meje
 fitted_model = model.fit()
 
 # Funkcija .fit() v ARIMA modelu oceni koeficiente ϕ₁, ϕ₂ (za AR komponento)
@@ -79,17 +97,52 @@ fitted_model = model.fit()
 # Ti ocenjeni parametri niso nujno enaki začetnim parametrom (ar_params in ma_params)
 # iz simulacije, ker se prilagodijo tako, da najbolje ustrezajo dejanskim podatkom.
 
+
 # Step 4: Forecast Future Values
 
-forecast_steps = 50  # Number of future steps
+forecast_steps = len(test) #50  # Number of future steps
 forecast = fitted_model.forecast(steps=forecast_steps)
 
- 
 
 # Step 5: Plot Original Data and Forecast
 plt.figure(figsize=(10, 5))
-plt.plot(time_series, label="Simulated Data", color='blue')
-plt.plot(range(len(time_series), len(time_series) + forecast_steps), forecast, label="Forecast", color='red', linestyle="dashed")
+plt.plot(train.index, train, label="Simulated Data", color='blue')
+plt.plot(test.index, test, label="Test Data", color='green')
+plt.plot(test.index, forecast, label="Forecast", color='red', linestyle="dashed")
 plt.title("ARIMA Model Fit and Forecast")
+plt.legend()
+plt.show()
+
+
+# rolling forecast
+from sklearn.metrics import mean_squared_error
+
+# Inicializacija
+history = [x for x in train]  # Začetni učni podatki
+predictions = []  # Seznam za shranjevanje napovedi
+
+# Iterativno napovedovanje
+for t in range(len(test)):
+    # Prileganje modela na trenutne učne podatke
+    model = ARIMA(history, order=(2, 0, 1))
+    model_fit = model.fit()
+    
+    # Napoved ene prihodnje vrednosti
+    yhat = model_fit.forecast(steps=1)[0]
+    predictions.append(yhat)
+    
+    # Dodaj dejansko vrednost iz testnega sklopa v učne podatke
+    history.append(test.iloc[t])
+
+# Izračun napake (npr. RMSE)
+rmse = mean_squared_error(test, predictions)
+print(f"RMSE: {rmse}")
+
+# Vizualizacija rezultatov
+plt.figure(figsize=(10, 5))
+plt.plot(train.index, train, label="Simulated Data", color='blue')
+plt.plot(test.index, test, label="Test Data", color='green')
+plt.plot(test.index, predictions, label="Rolling Forecast", color='red', linestyle="dashed")
+plt.title("Rolling Forecast with ARIMA")
 plt.legend()
 plt.show()
