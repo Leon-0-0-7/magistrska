@@ -303,3 +303,38 @@ def anonim_count(X_df, Y_df):
 
     result_df = pd.DataFrame(results)
     return result_df
+
+
+def filter_signals_based_on_metadata(original_df, metadata_df):
+    """
+    Filtrira signale v original_df na podlagi časovnih intervalov iz metadata_df.
+    
+    Args:
+        original_df (pd.DataFrame): DataFrame s časom in signali (stolpci: time_s, 38222, 78222...)
+        metadata_df (pd.DataFrame): DataFrame s časovnimi intervali (stolpci: Unnamed: 0, t1, t2, t3, t4)
+    
+    Returns:
+        pd.DataFrame: Filtrirani DataFrame z originalnimi časovnimi vrednostmi in samo podatki znotraj intervalov
+    """
+    result = original_df.copy()
+    
+    for signal_id in original_df.columns[1:]:  # Preskočimo stolpec 'time_s'
+        # Pridobimo čase iz metapodatkov
+        try:
+            metadata_times = metadata_df.loc[metadata_df['Unnamed: 0'] == int(signal_id), 
+                                           ['t1', 't2', 't3', 't4']].values.flatten()
+        except:
+            print(f"Ne najdem metapodatkov za ID {signal_id}")
+            continue
+        
+        # Filtriranje podatkov
+        mask = (
+            (original_df['time_s'].between(metadata_times[0], metadata_times[1])) | 
+            (original_df['time_s'].between(metadata_times[2], metadata_times[3]))
+        )
+        
+        # Posodobimo rezultat samo za filtrirane vrstice
+        result.loc[~mask, signal_id] = np.nan
+    
+    return result
+

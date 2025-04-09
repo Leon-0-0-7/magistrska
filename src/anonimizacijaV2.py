@@ -1,3 +1,7 @@
+'''
+Skripta za prikaz signalov + anonimizacijo signalov + štešje anonimcount + prikaz.
+'''
+
 from my_package.lib import (
     generate_signals_with_scipy_skewnorm,
     statistika,
