@@ -50,7 +50,7 @@ fig2 = create_interactive_plot(Y_df)
 # Kombinacija grafov
 plot_list = [fig1, fig2]
 titles = ["Osnoven signal", "Anonimiziran signal"]
-combined_fig = combine_plots(plot_list, titles, layout=(len(plot_list), 1), height=1000)
+combined_fig = combine_plots(plot_list, titles, layout=(len(plot_list), 1), height=1000, sitetitle="Graf originalnih signalov in graf anonimiziranih signalov")
 combined_fig.show()
 
 # Štetje po anonimizaciji

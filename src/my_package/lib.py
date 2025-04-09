@@ -174,7 +174,7 @@ def create_interactive_plot(data):
     return fig
 
 
-def combine_plots(plot_list, titles=None, layout=(1, 1), height=600, width=None):
+def combine_plots(plot_list, titles=None, layout=(1, 1), height=600, width=None, sitetitle="Combined Interactive Plots"):
     """
     Combine multiple plots into a single figure.
 
@@ -218,7 +218,7 @@ def combine_plots(plot_list, titles=None, layout=(1, 1), height=600, width=None)
     combined_fig.update_layout(
         height=height,
         width=width,
-        title_text="Combined Interactive Plots",
+        title_text=sitetitle,
     )
 
     return combined_fig
